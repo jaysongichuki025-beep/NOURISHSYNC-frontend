@@ -41,7 +41,7 @@ export default function DonorPortal({ onListingCreated }) {
 
       const data = await response.json();
       if (response.ok) {
-        setSuccessMessage('Surplus lot successfully published to the live marketplace! 🎉');
+        setSuccessMessage('Surplus lot successfully published! 🎉 Check your Dashboard to monitor claims.');
         setTitle('');
         setDonor('');
         setPickupLocation('');
@@ -66,7 +66,7 @@ export default function DonorPortal({ onListingCreated }) {
         <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight font-serif">
           Post Surplus Food.
         </h1>
-        <p className="text-gray-600 mt-2 font-medium">List available food items, specify quantities, and connect with local distribution hubs instantly.</p>
+        <p className="text-gray-600 mt-2 font-medium">List available food items and track who claims them directly in your dashboard.</p>
       </div>
 
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100/80">

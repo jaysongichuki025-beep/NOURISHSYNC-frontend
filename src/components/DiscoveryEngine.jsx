@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function DiscoveryEngine() {
+export default function DiscoveryEngine({ onClaimSuccess }) {
   const [listings, setListings] = useState([]);
   const [filterCategory, setFilterCategory] = useState('');
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,12 @@ export default function DiscoveryEngine() {
       });
       const data = await response.json();
       if (response.ok) {
-        alert(data.message);
+        alert(data.message || 'Lot successfully claimed!');
+        
+        // Immediately filter out the claimed listing from state view
+        setListings(prevListings => prevListings.filter(item => item.id !== listingId));
+        
+        if (onClaimSuccess) onClaimSuccess();
       } else {
         alert(data.error || 'Failed to claim lot.');
       }
@@ -77,49 +82,55 @@ export default function DiscoveryEngine() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredListings.map(item => (
-          <div key={item.id} className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/80 flex flex-col justify-between group">
-            <div>
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-food-light text-food-dark rounded-full">
-                  {item.category}
-                </span>
-                <span className="text-xs text-gray-400 font-medium">{item.donor}</span>
-              </div>
-              
-              <h3 className="text-2xl font-bold text-gray-900 group-hover:text-food-primary transition tracking-tight">
-                {item.title}
-              </h3>
-              
-              <div className="mt-6 space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-xs">📍</span>
-                  <span className="font-medium text-gray-700">{item.pickup_location}</span>
+      {filteredListings.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
+          <p className="text-lg font-bold text-gray-600">No surplus lots currently available in this category.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredListings.map(item => (
+            <div key={item.id} className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/80 flex flex-col justify-between group">
+              <div>
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-food-light text-food-dark rounded-full">
+                    {item.category}
+                  </span>
+                  <span className="text-xs text-gray-400 font-medium">{item.donor}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-xs">⚖️</span>
-                  <span className="font-medium text-gray-700">{item.quantity}</span>
+                
+                <h3 className="text-2xl font-bold text-gray-900 group-hover:text-food-primary transition tracking-tight">
+                  {item.title}
+                </h3>
+                
+                <div className="mt-6 space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-xs">📍</span>
+                    <span className="font-medium text-gray-700">{item.pickup_location}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-xs">⚖️</span>
+                    <span className="font-medium text-gray-700">{item.quantity}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-8 pt-6 border-t border-gray-50">
-              <div className="mb-4 flex items-center justify-between text-xs font-bold text-amber-800 bg-amber-50/70 p-3 rounded-2xl border border-amber-100/50">
-                <span>⌛ Expires</span>
-                <span>{item.expiration_date}</span>
+              <div className="mt-8 pt-6 border-t border-gray-50">
+                <div className="mb-4 flex items-center justify-between text-xs font-bold text-amber-800 bg-amber-50/70 p-3 rounded-2xl border border-amber-100/50">
+                  <span>⌛ Expires</span>
+                  <span>{item.expiration_date}</span>
+                </div>
+                
+                <button 
+                  onClick={() => handleClaim(item.id)}
+                  className="w-full bg-gray-900 text-white font-bold py-3.5 rounded-2xl hover:bg-food-primary transition shadow-sm text-sm"
+                >
+                  Claim Lot
+                </button>
               </div>
-              
-              <button 
-                onClick={() => handleClaim(item.id)}
-                className="w-full bg-gray-900 text-white font-bold py-3.5 rounded-2xl hover:bg-food-primary transition shadow-sm text-sm"
-              >
-                Claim Lot
-              </button>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

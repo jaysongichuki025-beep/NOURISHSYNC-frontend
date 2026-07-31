@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function AdminPanel() {
+export default function AdminDashboard() {
   const [data, setData] = useState({ users: [], listings: [], total_listings: 0, total_claims: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -45,40 +45,33 @@ export default function AdminPanel() {
   };
 
   if (loading) {
-    return <div className="text-center py-20 font-bold text-gray-500">Loading Impact Control Center...</div>;
+    return <div className="text-center py-20 font-bold text-gray-500">Loading System Master Control...</div>;
   }
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 min-h-screen bg-[#F8FAF7]">
       <div className="mb-12 pb-6 border-b border-gray-200">
         <span className="text-xs font-bold tracking-widest text-food-primary uppercase block mb-2">System Administrator Panel</span>
-        <h1 className="text-4xl font-black text-gray-900 tracking-tight font-serif">Impact Control Center</h1>
-        <p className="text-sm text-gray-500 mt-1">Monitor global platform metrics, user accounts, and content governance.</p>
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight font-serif">Platform Master Control Center</h1>
       </div>
 
-      {/* Impact Metrics Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Registered Accounts</p>
-          <p className="text-4xl font-black text-gray-900 mt-2">{data.users ? data.users.length : 0}</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Accounts</p>
+          <p className="text-4xl font-black text-gray-900 mt-2">{data.users.length}</p>
         </div>
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Donations</p>
-          <p className="text-4xl font-black text-gray-900 mt-2">{data.listings ? data.listings.length : 0}</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Donations Created</p>
+          <p className="text-4xl font-black text-gray-900 mt-2">{data.listings.length}</p>
         </div>
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Claims</p>
-          <p className="text-4xl font-black text-gray-900 mt-2">{data.total_claims || 0}</p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Est. Value Saved</p>
-          <p className="text-4xl font-black text-gray-900 mt-2">$4,850</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Claims Processed</p>
+          <p className="text-4xl font-black text-gray-900 mt-2">{data.total_claims}</p>
         </div>
       </div>
 
-      {/* Section 1: All Registered User Accounts */}
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Registered User Profiles</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">All Platform Accounts</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -90,7 +83,7 @@ export default function AdminPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
-              {data.users && data.users.map(u => (
+              {data.users.map(u => (
                 <tr key={u.id} className="hover:bg-gray-50/50 transition">
                   <td className="py-4 text-gray-400 font-medium">#{u.id}</td>
                   <td className="py-4 font-bold text-gray-900">{u.username}</td>
@@ -110,11 +103,10 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* Section 2: Full Donation & Claim Audit Feed */}
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Donation Tracking & Claims Audit</h2>
         <div className="space-y-4">
-          {!data.listings || data.listings.length === 0 ? (
+          {data.listings.length === 0 ? (
             <p className="text-sm text-gray-500">No donations registered in the system.</p>
           ) : (
             data.listings.map(item => (
