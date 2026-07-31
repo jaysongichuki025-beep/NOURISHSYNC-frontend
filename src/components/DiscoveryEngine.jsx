@@ -19,14 +19,20 @@ export default function DiscoveryEngine() {
   }, []);
 
   const handleClaim = async (listingId) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in as a recipient to claim surplus lots.');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:5000/api/claim', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          listing_id: listingId, 
-          recipient_email: 'receiver@nourishsync.org' 
-        })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ listing_id: listingId })
       });
       const data = await response.json();
       if (response.ok) {
