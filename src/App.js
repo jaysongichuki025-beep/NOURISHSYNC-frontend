@@ -1,10 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DiscoveryEngine from './components/DiscoveryEngine';
 import DonorPortal from './components/DonorPortal';
 import AdminPanel from './components/AdminPanel';
+import AuthModal from './components/AuthModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('discovery');
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setActiveTab('discovery');
+  };
 
   return (
     <div className="min-h-screen bg-food-light flex flex-col font-sans">
@@ -36,29 +53,47 @@ export default function App() {
             >
               Marketplace
             </button>
-            <button 
-              onClick={() => setActiveTab('donor')}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition ${activeTab === 'donor' ? 'bg-white text-food-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-            >
-              Donate Food
-            </button>
-            <button 
-              onClick={() => setActiveTab('admin')}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition ${activeTab === 'admin' ? 'bg-white text-food-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-            >
-              Impact Admin
-            </button>
+            {user && user.role === 'donor' && (
+              <button 
+                onClick={() => setActiveTab('donor')}
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition ${activeTab === 'donor' ? 'bg-white text-food-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+              >
+                Donate Food
+              </button>
+            )}
+            {user && user.role === 'admin' && (
+              <button 
+                onClick={() => setActiveTab('admin')}
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition ${activeTab === 'admin' ? 'bg-white text-food-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+              >
+                Impact Admin
+              </button>
+            )}
           </nav>
 
-          {/* User Profile Pill */}
+          {/* User Profile or Sign In Button */}
           <div className="flex items-center gap-3">
-            <div className="hidden sm:block text-right">
-              <p className="text-xs font-bold text-gray-900">Green Valley Hub</p>
-              <p className="text-[10px] text-food-primary font-semibold uppercase tracking-wider">Verified Partner</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-food-light border-2 border-food-primary/20 flex items-center justify-center font-bold text-food-dark">
-              GV
-            </div>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:block text-right">
+                  <p className="text-xs font-bold text-gray-900">{user.organization_name}</p>
+                  <p className="text-[10px] text-food-primary font-semibold uppercase tracking-wider">{user.role}</p>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-50 hover:text-red-600 transition"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setIsAuthOpen(true)}
+                className="bg-gray-900 text-white px-5 py-2.5 rounded-2xl text-xs font-bold hover:bg-food-primary transition shadow-sm"
+              >
+                Sign In / Register
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -69,6 +104,18 @@ export default function App() {
         {activeTab === 'donor' && <DonorPortal />}
         {activeTab === 'admin' && <AdminPanel />}
       </main>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthOpen} 
+        onClose={() => setIsAuthOpen(false)} 
+        onLoginSuccess={(loggedInUser) => {
+          setUser(loggedInUser);
+          if (loggedInUser.role === 'donor') setActiveTab('donor');
+          else if (loggedInUser.role === 'admin') setActiveTab('admin');
+          else setActiveTab('discovery');
+        }}
+      />
     </div>
   );
 }
