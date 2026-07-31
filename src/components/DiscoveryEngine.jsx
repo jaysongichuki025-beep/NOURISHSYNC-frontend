@@ -1,36 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function DiscoveryEngine() {
-  const [listings] = useState([
-    {
-      id: 1,
-      title: 'Fresh Organic Heirloom Tomatoes',
-      category: 'Produce',
-      quantity: '15 kg available',
-      pickup_location: 'Green Valley Supermarket, Dock 4',
-      expiration_date: 'Tomorrow, 5:00 PM',
-      donor: 'Whole Foods Partner'
-    },
-    {
-      id: 2,
-      title: 'Artisan Sourdough & Multigrain Loaves',
-      category: 'Bakery',
-      quantity: '30 loaves',
-      pickup_location: 'Daily Bread Bakery Hub',
-      expiration_date: 'Today, 9:00 PM',
-      donor: 'Central Bakery'
-    }
-  ]);
-
+  const [listings, setListings] = useState([]);
   const [filterCategory, setFilterCategory] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/listings')
+      .then(res => res.json())
+      .then(data => {
+        setListings(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error fetching listings:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleClaim = async (listingId) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          listing_id: listingId, 
+          recipient_email: 'receiver@nourishsync.org' 
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message);
+      } else {
+        alert(data.error || 'Failed to claim lot.');
+      }
+    } catch (err) {
+      console.error("Error claiming lot:", err);
+      alert('Network error while claiming lot.');
+    }
+  };
 
   const filteredListings = filterCategory 
     ? listings.filter(item => item.category === filterCategory)
     : listings;
 
+  if (loading) {
+    return <div className="text-center py-20 font-bold text-gray-500">Loading live marketplace data...</div>;
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 min-h-screen bg-[#F8FAF7]">
-      {/* Editorial Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 pb-6 border-b border-gray-200/60 gap-6">
         <div>
           <span className="text-xs font-bold tracking-widest text-food-primary uppercase block mb-2">Live Inventory Feed</span>
@@ -39,7 +58,6 @@ export default function DiscoveryEngine() {
           </h1>
         </div>
         
-        {/* Custom Filter Tabs */}
         <div className="flex gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
           {['', 'Produce', 'Bakery', 'Prepared'].map((cat) => (
             <button
@@ -53,7 +71,6 @@ export default function DiscoveryEngine() {
         </div>
       </div>
 
-      {/* Modern Asymmetrical Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredListings.map(item => (
           <div key={item.id} className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/80 flex flex-col justify-between group">
@@ -87,7 +104,10 @@ export default function DiscoveryEngine() {
                 <span>{item.expiration_date}</span>
               </div>
               
-              <button className="w-full bg-gray-900 text-white font-bold py-3.5 rounded-2xl hover:bg-food-primary transition shadow-sm text-sm">
+              <button 
+                onClick={() => handleClaim(item.id)}
+                className="w-full bg-gray-900 text-white font-bold py-3.5 rounded-2xl hover:bg-food-primary transition shadow-sm text-sm"
+              >
                 Claim Lot
               </button>
             </div>
