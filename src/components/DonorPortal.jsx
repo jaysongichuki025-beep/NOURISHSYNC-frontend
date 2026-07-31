@@ -1,130 +1,171 @@
 import React, { useState } from 'react';
 
-export default function DonorPortal() {
-  const [formData, setFormData] = useState({
-    title: '',
-    category: 'Produce',
-    quantity: '',
-    expiration_date: '',
-    pickup_location: ''
-  });
+export default function DonorPortal({ onListingCreated }) {
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('Produce');
+  const [donor, setDonor] = useState('');
+  const [pickupLocation, setPickupLocation] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [expirationDate, setExpirationDate] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting surplus donation:", formData);
-    setSubmitted(true);
+    setLoading(true);
+    setSuccessMessage('');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in as a food donor to post surplus lots.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/listings', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title,
+          category,
+          donor,
+          pickup_location: pickupLocation,
+          quantity,
+          expiration_date: expirationDate
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setSuccessMessage('Surplus lot successfully published to the live marketplace! 🎉');
+        setTitle('');
+        setDonor('');
+        setPickupLocation('');
+        setQuantity('');
+        setExpirationDate('');
+        if (onListingCreated) onListingCreated();
+      } else {
+        alert(data.error || 'Failed to create listing.');
+      }
+    } catch (err) {
+      console.error('Error posting listing:', err);
+      alert('Network error while posting listing.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 min-h-screen bg-[#F8FAF7]">
-      {/* Editorial Header */}
       <div className="mb-12 pb-6 border-b border-gray-200/60">
-        <span className="text-xs font-bold tracking-widest text-food-primary uppercase block mb-2">Partner Contribution</span>
+        <span className="text-xs font-bold tracking-widest text-food-primary uppercase block mb-2">Donor Portal</span>
         <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight font-serif">
           Post Surplus Food.
         </h1>
-        <p className="text-gray-600 mt-2 font-medium">Publish available edible stock instantly to connect with nearby distribution centers.</p>
+        <p className="text-gray-600 mt-2 font-medium">List available food items, specify quantities, and connect with local distribution hubs instantly.</p>
       </div>
 
-      {submitted ? (
-        <div className="bg-white p-12 rounded-3xl shadow-sm border border-gray-100 text-center">
-          <div className="w-16 h-16 bg-food-light text-food-primary rounded-2xl mx-auto flex items-center justify-center text-3xl mb-6">🎉</div>
-          <h3 className="text-3xl font-black text-gray-900 tracking-tight">Listing Published Successfully</h3>
-          <p className="text-gray-600 mt-3 max-w-md mx-auto">Your surplus food lot is now live in the marketplace for local partners to claim.</p>
-          <button 
-            onClick={() => { setSubmitted(false); setFormData({ title: '', category: 'Produce', quantity: '', expiration_date: '', pickup_location: '' }); }}
-            className="mt-8 bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-food-primary transition shadow-sm text-sm"
-          >
-            Post Another Lot
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100/80 space-y-8">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Food Title / Description</label>
-            <input 
-              type="text" 
-              name="title" 
-              required
-              placeholder="e.g., Fresh Organic Carrots & Potatoes"
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full p-4 border border-gray-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-food-primary bg-gray-50/50 font-medium text-gray-900 transition"
-            />
+      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100/80">
+        {successMessage && (
+          <div className="mb-6 p-4 bg-food-light text-food-dark rounded-2xl text-xs font-bold border border-emerald-100">
+            {successMessage}
           </div>
+        )}
 
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Food Category</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Item Title</label>
+              <input 
+                type="text" 
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-food-primary text-sm font-medium"
+                placeholder="e.g. Fresh Organic Spinach Lots"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Food Category</label>
               <select 
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full p-4 border border-gray-200/80 rounded-2xl bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-food-primary font-medium text-gray-900 transition"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-food-primary text-sm font-medium bg-white"
               >
-                <option value="Produce">Fresh Produce</option>
-                <option value="Bakery">Bakery & Grains</option>
+                <option value="Produce">Produce</option>
+                <option value="Bakery">Bakery</option>
                 <option value="Prepared">Prepared Meals</option>
-                <option value="Dairy">Dairy & Eggs</option>
+                <option value="Dairy">Dairy & Refrigerated</option>
               </select>
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Quantity / Weight</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Donor / Business Name</label>
               <input 
                 type="text" 
-                name="quantity" 
                 required
-                placeholder="e.g., 20 kg or 40 boxes"
-                value={formData.quantity}
-                onChange={handleChange}
-                className="w-full p-4 border border-gray-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-food-primary bg-gray-50/50 font-medium text-gray-900 transition"
+                value={donor}
+                onChange={(e) => setDonor(e.target.value)}
+                className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-food-primary text-sm font-medium"
+                placeholder="e.g. Green Valley Farm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Pickup Location</label>
+              <input 
+                type="text" 
+                required
+                value={pickupLocation}
+                onChange={(e) => setPickupLocation(e.target.value)}
+                className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-food-primary text-sm font-medium"
+                placeholder="e.g. 123 Market St, Nairobi"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Expiration / Best-By Date & Time</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Weight / Quantity</label>
               <input 
                 type="text" 
-                name="expiration_date" 
                 required
-                placeholder="e.g., Tomorrow, 4:00 PM"
-                value={formData.expiration_date}
-                onChange={handleChange}
-                className="w-full p-4 border border-gray-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-food-primary bg-gray-50/50 font-medium text-gray-900 transition"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-food-primary text-sm font-medium"
+                placeholder="e.g. 15 kg or 20 loaves"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Precise Pickup Location</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Expiration / Best-By Date</label>
               <input 
                 type="text" 
-                name="pickup_location" 
                 required
-                placeholder="e.g., 123 Market Street, Dock B"
-                value={formData.pickup_location}
-                onChange={handleChange}
-                className="w-full p-4 border border-gray-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-food-primary bg-gray-50/50 font-medium text-gray-900 transition"
+                value={expirationDate}
+                onChange={(e) => setExpirationDate(e.target.value)}
+                className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-food-primary text-sm font-medium"
+                placeholder="e.g. Tomorrow or In 2 days"
               />
             </div>
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl hover:bg-food-primary transition shadow-sm text-base"
+            disabled={loading}
+            className="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl hover:bg-food-primary transition shadow-sm text-sm mt-8"
           >
-            Publish Surplus Listing
+            {loading ? 'Publishing Listing...' : 'Publish Surplus Lot'}
           </button>
         </form>
-      )}
+      </div>
     </div>
   );
 }
