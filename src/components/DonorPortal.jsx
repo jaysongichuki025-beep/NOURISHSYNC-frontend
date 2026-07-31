@@ -17,36 +17,37 @@ export default function DonorPortal() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would normally call your backend API via fetchWithAuth('/listings', { method: 'POST', body: JSON.stringify(formData) })
     console.log("Submitting surplus donation:", formData);
     setSubmitted(true);
   };
 
   return (
-    <div className="p-8 max-w-3xl mx-auto min-h-screen bg-food-light">
-      <div className="mb-8">
-        <h1 className="text-4xl font-extrabold text-food-dark tracking-tight">
-          Donor Portal: Post Surplus Food
+    <div className="max-w-4xl mx-auto px-6 py-12 min-h-screen bg-[#F8FAF7]">
+      {/* Editorial Header */}
+      <div className="mb-12 pb-6 border-b border-gray-200/60">
+        <span className="text-xs font-bold tracking-widest text-food-primary uppercase block mb-2">Partner Contribution</span>
+        <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight font-serif">
+          Post Surplus Food.
         </h1>
-        <p className="text-gray-600 mt-2">Publish available edible surplus to connect with local distribution centers instantly.</p>
+        <p className="text-gray-600 mt-2 font-medium">Publish available edible stock instantly to connect with nearby distribution centers.</p>
       </div>
 
       {submitted ? (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-food-primary/30 text-center">
-          <div className="text-5xl mb-3">🎉</div>
-          <h3 className="text-2xl font-bold text-food-dark">Listing Published Successfully!</h3>
-          <p className="text-gray-600 mt-2">Your surplus food lot is now live in the Discovery Engine for nearby centers to claim.</p>
+        <div className="bg-white p-12 rounded-3xl shadow-sm border border-gray-100 text-center">
+          <div className="w-16 h-16 bg-food-light text-food-primary rounded-2xl mx-auto flex items-center justify-center text-3xl mb-6">🎉</div>
+          <h3 className="text-3xl font-black text-gray-900 tracking-tight">Listing Published Successfully</h3>
+          <p className="text-gray-600 mt-3 max-w-md mx-auto">Your surplus food lot is now live in the marketplace for local partners to claim.</p>
           <button 
             onClick={() => { setSubmitted(false); setFormData({ title: '', category: 'Produce', quantity: '', expiration_date: '', pickup_location: '' }); }}
-            className="mt-6 bg-food-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-food-dark transition"
+            className="mt-8 bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-food-primary transition shadow-sm text-sm"
           >
-            Post Another Listing
+            Post Another Lot
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100/80 space-y-8">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Food Title / Description</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Food Title / Description</label>
             <input 
               type="text" 
               name="title" 
@@ -54,18 +55,18 @@ export default function DonorPortal() {
               placeholder="e.g., Fresh Organic Carrots & Potatoes"
               value={formData.title}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-food-primary"
+              className="w-full p-4 border border-gray-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-food-primary bg-gray-50/50 font-medium text-gray-900 transition"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Food Category</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Food Category</label>
               <select 
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-food-primary"
+                className="w-full p-4 border border-gray-200/80 rounded-2xl bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-food-primary font-medium text-gray-900 transition"
               >
                 <option value="Produce">Fresh Produce</option>
                 <option value="Bakery">Bakery & Grains</option>
@@ -75,7 +76,7 @@ export default function DonorPortal() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Quantity / Weight</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Quantity / Weight</label>
               <input 
                 type="text" 
                 name="quantity" 
@@ -83,14 +84,14 @@ export default function DonorPortal() {
                 placeholder="e.g., 20 kg or 40 boxes"
                 value={formData.quantity}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-food-primary"
+                className="w-full p-4 border border-gray-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-food-primary bg-gray-50/50 font-medium text-gray-900 transition"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Expiration / Best-By Date & Time</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Expiration / Best-By Date & Time</label>
               <input 
                 type="text" 
                 name="expiration_date" 
@@ -98,12 +99,12 @@ export default function DonorPortal() {
                 placeholder="e.g., Tomorrow, 4:00 PM"
                 value={formData.expiration_date}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-food-primary"
+                className="w-full p-4 border border-gray-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-food-primary bg-gray-50/50 font-medium text-gray-900 transition"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Precise Pickup Location</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Precise Pickup Location</label>
               <input 
                 type="text" 
                 name="pickup_location" 
@@ -111,14 +112,14 @@ export default function DonorPortal() {
                 placeholder="e.g., 123 Market Street, Dock B"
                 value={formData.pickup_location}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-food-primary"
+                className="w-full p-4 border border-gray-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-food-primary bg-gray-50/50 font-medium text-gray-900 transition"
               />
             </div>
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-food-primary text-white font-semibold py-4 rounded-xl hover:bg-food-dark transition shadow-sm text-lg"
+            className="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl hover:bg-food-primary transition shadow-sm text-base"
           >
             Publish Surplus Listing
           </button>

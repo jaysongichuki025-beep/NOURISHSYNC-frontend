@@ -4,19 +4,21 @@ export default function DiscoveryEngine() {
   const [listings] = useState([
     {
       id: 1,
-      title: 'Fresh Organic Tomatoes',
+      title: 'Fresh Organic Heirloom Tomatoes',
       category: 'Produce',
-      quantity: '15 kg',
-      pickup_location: 'Green Valley Supermarket',
-      expiration_date: 'Tomorrow, 5:00 PM'
+      quantity: '15 kg available',
+      pickup_location: 'Green Valley Supermarket, Dock 4',
+      expiration_date: 'Tomorrow, 5:00 PM',
+      donor: 'Whole Foods Partner'
     },
     {
       id: 2,
-      title: 'Assorted Sourdough Bread',
+      title: 'Artisan Sourdough & Multigrain Loaves',
       category: 'Bakery',
       quantity: '30 loaves',
-      pickup_location: 'Artisan Bakery Hub',
-      expiration_date: 'Today, 9:00 PM'
+      pickup_location: 'Daily Bread Bakery Hub',
+      expiration_date: 'Today, 9:00 PM',
+      donor: 'Central Bakery'
     }
   ]);
 
@@ -27,44 +29,68 @@ export default function DiscoveryEngine() {
     : listings;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto min-h-screen bg-food-light">
-      <div className="mb-8">
-        <h1 className="text-4xl font-extrabold text-food-dark tracking-tight">
-          Surplus Food Discovery Engine
-        </h1>
-        <p className="text-gray-600 mt-2">Browse available surplus food listings near your distribution center.</p>
-      </div>
-      
-      <div className="mb-6 flex gap-4">
-        <select 
-          className="p-3 border border-gray-200 rounded-xl shadow-sm bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-food-primary"
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-        >
-          <option value="">All Categories</option>
-          <option value="Produce">Fresh Produce</option>
-          <option value="Bakery">Bakery & Grains</option>
-          <option value="Prepared">Prepared Meals</option>
-        </select>
+    <div className="max-w-7xl mx-auto px-6 py-12 min-h-screen bg-[#F8FAF7]">
+      {/* Editorial Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 pb-6 border-b border-gray-200/60 gap-6">
+        <div>
+          <span className="text-xs font-bold tracking-widest text-food-primary uppercase block mb-2">Live Inventory Feed</span>
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight font-serif">
+            Surplus & Rescue Marketplace.
+          </h1>
+        </div>
+        
+        {/* Custom Filter Tabs */}
+        <div className="flex gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
+          {['', 'Produce', 'Bakery', 'Prepared'].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setFilterCategory(cat)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filterCategory === cat ? 'bg-food-dark text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+            >
+              {cat === '' ? 'All Lots' : cat}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Modern Asymmetrical Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredListings.map(item => (
-          <div key={item.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
-            <span className="text-xs font-bold px-3 py-1 bg-food-primary/10 text-food-primary rounded-full uppercase tracking-wide">
-              {item.category}
-            </span>
-            <h3 className="text-2xl font-bold mt-3 text-gray-900">{item.title}</h3>
-            <div className="space-y-1 mt-3 text-gray-600 text-sm">
-              <p>📍 <span className="font-medium">Location:</span> {item.pickup_location}</p>
-              <p>⚖️ <span className="font-medium">Quantity:</span> {item.quantity}</p>
+          <div key={item.id} className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/80 flex flex-col justify-between group">
+            <div>
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-food-light text-food-dark rounded-full">
+                  {item.category}
+                </span>
+                <span className="text-xs text-gray-400 font-medium">{item.donor}</span>
+              </div>
+              
+              <h3 className="text-2xl font-bold text-gray-900 group-hover:text-food-primary transition tracking-tight">
+                {item.title}
+              </h3>
+              
+              <div className="mt-6 space-y-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-xs">📍</span>
+                  <span className="font-medium text-gray-700">{item.pickup_location}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-xs">⚖️</span>
+                  <span className="font-medium text-gray-700">{item.quantity}</span>
+                </div>
+              </div>
             </div>
-            <div className="mt-4 p-3 bg-food-accent/10 rounded-xl border border-food-accent/20 text-sm font-semibold text-amber-800">
-              ⌛ Best by: {item.expiration_date}
+
+            <div className="mt-8 pt-6 border-t border-gray-50">
+              <div className="mb-4 flex items-center justify-between text-xs font-bold text-amber-800 bg-amber-50/70 p-3 rounded-2xl border border-amber-100/50">
+                <span>⌛ Expires</span>
+                <span>{item.expiration_date}</span>
+              </div>
+              
+              <button className="w-full bg-gray-900 text-white font-bold py-3.5 rounded-2xl hover:bg-food-primary transition shadow-sm text-sm">
+                Claim Lot
+              </button>
             </div>
-            <button className="mt-5 w-full bg-food-primary text-white font-semibold py-3 rounded-xl hover:bg-food-dark transition shadow-sm">
-              Claim Donation Lot
-            </button>
           </div>
         ))}
       </div>
