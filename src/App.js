@@ -13,15 +13,21 @@ export default function App() {
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (e) {
+        console.error("Failed to parse stored user", e);
+        localStorage.clear();
+      }
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.clear();
     setUser(null);
     setActiveTab('discovery');
+    window.location.reload(); // Ensures a pristine memory state wipe
   };
 
   return (
@@ -104,9 +110,10 @@ export default function App() {
 
       <main className="flex-grow">
         {activeTab === 'discovery' && <DiscoveryEngine onClaimSuccess={() => setActiveTab('dashboard')} />}
-        {activeTab === 'dashboard' && <Dashboard />}
-        {activeTab === 'donor' && <DonorPortal onListingCreated={() => setActiveTab('dashboard')} />}
-        {activeTab === 'admin' && <AdminPanel />}
+        {/* Dynamic keys force React to recreate component instances completely on user account changes */}
+        {activeTab === 'dashboard' && <Dashboard key={user?.username || 'guest'} />}
+        {activeTab === 'donor' && <DonorPortal key={user?.username || 'guest'} onListingCreated={() => setActiveTab('dashboard')} />}
+        {activeTab === 'admin' && <AdminPanel key={user?.username || 'guest'} />}
       </main>
 
       <AuthModal 
@@ -114,9 +121,13 @@ export default function App() {
         onClose={() => setIsAuthOpen(false)} 
         onLoginSuccess={(loggedInUser) => {
           setUser(loggedInUser);
-          if (loggedInUser.role === 'donor') setActiveTab('donor');
-          else if (loggedInUser.role === 'admin') setActiveTab('admin');
-          else setActiveTab('dashboard');
+          if (loggedInUser.role === 'donor') {
+            setActiveTab('donor');
+          } else if (loggedInUser.role === 'admin') {
+            setActiveTab('admin');
+          } else {
+            setActiveTab('dashboard');
+          }
         }}
       />
     </div>

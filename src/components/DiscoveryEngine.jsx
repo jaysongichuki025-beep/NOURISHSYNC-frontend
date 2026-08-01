@@ -2,133 +2,142 @@ import React, { useState, useEffect } from 'react';
 
 export default function DiscoveryEngine({ onClaimSuccess }) {
   const [listings, setListings] = useState([]);
-  const [filterCategory, setFilterCategory] = useState('');
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [pickupTime, setPickupTime] = useState('Today (2:00 PM - 4:00 PM)');
   const [loading, setLoading] = useState(true);
 
+  const fetchListings = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/listings');
+      const data = await res.json();
+      if (res.ok) setListings(data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching listings:", err);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetch('http://localhost:5000/api/listings')
-      .then(res => res.json())
-      .then(data => {
-        setListings(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error fetching listings:", err);
-        setLoading(false);
-      });
+    fetchListings();
   }, []);
 
-  const handleClaim = async (listingId) => {
+  const handleConfirmClaim = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Please log in as a recipient to claim surplus lots.');
+      alert("Please sign in to claim a food lot.");
       return;
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/claim', {
+      const res = await fetch('http://localhost:5000/api/claim', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ listing_id: listingId })
+        body: JSON.stringify({ 
+          listing_id: selectedListing.id,
+          pickup_time: pickupTime 
+        })
       });
-      const data = await response.json();
-      if (response.ok) {
-        alert(data.message || 'Lot successfully claimed!');
-        
-        // Immediately filter out the claimed listing from state view
-        setListings(prevListings => prevListings.filter(item => item.id !== listingId));
-        
+      const data = await res.json();
+      if (res.ok) {
+        alert("Lot successfully claimed! Thank-you message & pickup window sent to the donor.");
+        setSelectedListing(null);
+        fetchListings();
         if (onClaimSuccess) onClaimSuccess();
       } else {
-        alert(data.error || 'Failed to claim lot.');
+        alert(data.error || "Failed to claim lot.");
       }
     } catch (err) {
-      console.error("Error claiming lot:", err);
-      alert('Network error while claiming lot.');
+      console.error("Claim error:", err);
     }
   };
 
-  const filteredListings = filterCategory 
-    ? listings.filter(item => item.category === filterCategory)
-    : listings;
-
-  if (loading) {
-    return <div className="text-center py-20 font-bold text-gray-500">Loading live marketplace data...</div>;
-  }
+  if (loading) return <div className="text-center py-20 font-bold text-gray-400">Loading Marketplace...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 min-h-screen bg-[#F8FAF7]">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 pb-6 border-b border-gray-200/60 gap-6">
-        <div>
-          <span className="text-xs font-bold tracking-widest text-food-primary uppercase block mb-2">Live Inventory Feed</span>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight font-serif">
-            Surplus & Rescue Marketplace.
-          </h1>
-        </div>
-        
-        <div className="flex gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
-          {['', 'Produce', 'Bakery', 'Prepared'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilterCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filterCategory === cat ? 'bg-food-dark text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-            >
-              {cat === '' ? 'All Lots' : cat}
-            </button>
-          ))}
-        </div>
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <h1 className="text-4xl font-serif font-black text-gray-900 mb-8">Surplus Food Marketplace</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {listings.map(item => {
+          // Fallback map for clean display if old seeded strings persist
+          const displayDonorName = item.donor === 'grand_bakery' ? 'Grand Bakery' :
+                                   item.donor === 'green_valley' ? 'Green Valley Farms' :
+                                   item.donor === 'city_hotel' ? 'City Hotel Hub' :
+                                   item.donor;
+
+          return (
+            <div key={item.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold bg-food-light text-food-primary px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  {item.category}
+                </span>
+                <h3 className="text-xl font-bold text-gray-900 mt-3">{item.title}</h3>
+                <p className="text-xs text-gray-500 mt-2 space-y-1">
+                  <strong>Donor:</strong> <span className="font-semibold text-gray-800">{displayDonorName}</span> <br />
+                  <strong>Location:</strong> <span className="font-semibold text-gray-800">{item.pickup_location}</span> <br />
+                  <strong>Quantity:</strong> <span className="font-semibold text-gray-800">{item.quantity}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedListing(item)}
+                className="mt-6 w-full bg-gray-900 text-white py-3 rounded-xl text-xs font-bold hover:bg-food-primary transition shadow-sm"
+              >
+                Claim Lot
+              </button>
+            </div>
+          );
+        })}
       </div>
 
-      {filteredListings.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
-          <p className="text-lg font-bold text-gray-600">No surplus lots currently available in this category.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredListings.map(item => (
-            <div key={item.id} className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/80 flex flex-col justify-between group">
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-food-light text-food-dark rounded-full">
-                    {item.category}
-                  </span>
-                  <span className="text-xs text-gray-400 font-medium">{item.donor}</span>
-                </div>
-                
-                <h3 className="text-2xl font-bold text-gray-900 group-hover:text-food-primary transition tracking-tight">
-                  {item.title}
-                </h3>
-                
-                <div className="mt-6 space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-xs">📍</span>
-                    <span className="font-medium text-gray-700">{item.pickup_location}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-xs">⚖️</span>
-                    <span className="font-medium text-gray-700">{item.quantity}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-gray-50">
-                <div className="mb-4 flex items-center justify-between text-xs font-bold text-amber-800 bg-amber-50/70 p-3 rounded-2xl border border-amber-100/50">
-                  <span>⌛ Expires</span>
-                  <span>{item.expiration_date}</span>
-                </div>
-                
-                <button 
-                  onClick={() => handleClaim(item.id)}
-                  className="w-full bg-gray-900 text-white font-bold py-3.5 rounded-2xl hover:bg-food-primary transition shadow-sm text-sm"
-                >
-                  Claim Lot
-                </button>
-              </div>
+      {selectedListing && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-gray-100 space-y-6">
+            <div>
+              <span className="text-xs font-bold text-food-primary uppercase tracking-wider">Schedule Pickup</span>
+              <h2 className="text-2xl font-bold font-serif text-gray-900 mt-1">Claim: {selectedListing.title}</h2>
+              <p className="text-xs text-gray-500 mt-1">Select your preferred collection window. This schedule and a thank-you note will be delivered to the donor.</p>
             </div>
-          ))}
+
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">Select Pickup Window</label>
+              <select 
+                value={pickupTime}
+                onChange={(e) => setPickupTime(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-food-primary"
+              >
+                <option value="Today (2:00 PM - 4:00 PM)">Today (2:00 PM - 4:00 PM)</option>
+                <option value="Today (4:00 PM - 6:00 PM)">Today (4:00 PM - 6:00 PM)</option>
+                <option value="Tomorrow Morning (9:00 AM - 11:00 AM)">Tomorrow Morning (9:00 AM - 11:00 AM)</option>
+                <option value="Tomorrow Afternoon (1:00 PM - 3:00 PM)">Tomorrow Afternoon (1:00 PM - 3:00 PM)</option>
+              </select>
+            </div>
+
+            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+              <p className="text-xs font-bold text-emerald-800 mb-1">💌 Donor Message Preview:</p>
+              <p className="text-xs text-emerald-900 italic">
+                "Thank you for your generous donation! Our team has scheduled the rescue pickup for <strong className="text-gray-900">{pickupTime}</strong> at {selectedListing.pickup_location}."
+              </p>
+            </div>
+
+            <div className="flex gap-4 pt-2">
+              <button
+                onClick={() => setSelectedListing(null)}
+                className="w-1/2 bg-gray-100 text-gray-700 py-3 rounded-xl text-xs font-bold hover:bg-gray-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmClaim}
+                className="w-1/2 bg-gray-900 text-white py-3 rounded-xl text-xs font-bold hover:bg-food-primary transition shadow-sm"
+              >
+                Confirm & Send Notice
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -44,6 +44,26 @@ export default function AdminPanel() {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to remove this user account?")) return;
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        alert("User account removed successfully.");
+        fetchAdminData();
+      } else {
+        const errData = await res.json();
+        alert(errData.error || "Failed to delete user.");
+      }
+    } catch (err) {
+      console.error("Error deleting user:", err);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-20 font-bold text-gray-500">Loading Impact Control Center...</div>;
   }
@@ -56,7 +76,6 @@ export default function AdminPanel() {
         <p className="text-sm text-gray-500 mt-1">Monitor global platform metrics, user accounts, and content governance.</p>
       </div>
 
-      {/* Impact Metrics Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Registered Accounts</p>
@@ -76,7 +95,6 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* Section 1: All Registered User Accounts */}
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Registered User Profiles</h2>
         <div className="overflow-x-auto">
@@ -87,6 +105,7 @@ export default function AdminPanel() {
                 <th className="pb-4">Username</th>
                 <th className="pb-4">Organization Name</th>
                 <th className="pb-4">Role</th>
+                <th className="pb-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
@@ -103,6 +122,16 @@ export default function AdminPanel() {
                       {u.role}
                     </span>
                   </td>
+                  <td className="py-4 text-right">
+                    {u.role !== 'admin' && (
+                      <button
+                        onClick={() => handleDeleteUser(u.id)}
+                        className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition px-3 py-1.5 rounded-xl text-xs font-bold"
+                      >
+                        Remove User
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -110,7 +139,6 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* Section 2: Full Donation & Claim Audit Feed */}
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Donation Tracking & Claims Audit</h2>
         <div className="space-y-4">
