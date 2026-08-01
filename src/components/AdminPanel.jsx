@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 export default function AdminPanel() {
   const [data, setData] = useState({ users: [], listings: [], total_listings: 0, total_claims: 0 });
   const [loading, setLoading] = useState(true);
@@ -7,7 +9,7 @@ export default function AdminPanel() {
   const fetchAdminData = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5000/api/dashboard', {
+      const res = await fetch(`${API_URL}/api/dashboard`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const dashData = await res.json();
@@ -29,7 +31,7 @@ export default function AdminPanel() {
     if (!window.confirm("Are you sure you want to depublish or remove this donation lot?")) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/listings/${listingId}`, {
+      const res = await fetch(`${API_URL}/api/admin/listings/${listingId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -48,7 +50,7 @@ export default function AdminPanel() {
     if (!window.confirm("Are you sure you want to remove this user account?")) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+      const res = await fetch(`${API_URL}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

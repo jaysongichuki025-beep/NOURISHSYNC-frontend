@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 export default function DonorPortal({ onListingCreated }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,7 @@ export default function DonorPortal({ onListingCreated }) {
   const fetchDonorDashboard = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5000/api/dashboard', {
+      const res = await fetch(`${API_URL}/api/dashboard`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -34,7 +36,7 @@ export default function DonorPortal({ onListingCreated }) {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     try {
-      const res = await fetch('http://localhost:5000/api/listings', {
+      const res = await fetch(`${API_URL}/api/listings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
