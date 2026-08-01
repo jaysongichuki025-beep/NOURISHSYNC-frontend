@@ -56,4 +56,4 @@ The frontend depends on:
 
 - This update is documentation-only and does not change UI layout or page flow.
 - Work in the `glenn` branch and open a pull request for review.
-- If you need to add a feature, keep related UI changes separate from layout updates.
+- If you need to add a feature, keep related UI changes separate from layout updates
