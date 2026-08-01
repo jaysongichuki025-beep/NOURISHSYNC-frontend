@@ -4,6 +4,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
+  const [impact, setImpact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -21,7 +22,10 @@ export default function Dashboard() {
       .then(res => res.json())
       .then(data => {
         if (data.error) setError(data.error);
-        else setDashboardData(data);
+        else {
+          setDashboardData(data);
+          if (data.role === 'receiver') fetchImpact(token);
+        }
         setLoading(false);
       })
       .catch(err => {
@@ -29,6 +33,17 @@ export default function Dashboard() {
         setError('Failed to load dashboard data.');
         setLoading(false);
       });
+  };
+
+  const fetchImpact = (token) => {
+    fetch(`${API_URL}/api/impact`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) setImpact(data);
+      })
+      .catch(err => console.error('Error fetching impact metrics:', err));
   };
 
   useEffect(() => {
@@ -53,6 +68,28 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error("Approval error:", err);
+    }
+  };
+
+  const handleMarkCollected = async (claimId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_URL}/api/claims/${claimId}/collect`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Collection verified! This lot has been logged to your impact metrics.");
+        fetchDashboard();
+      } else {
+        alert(data.error || "Failed to verify collection.");
+      }
+    } catch (err) {
+      console.error("Collection verification error:", err);
     }
   };
 
@@ -87,6 +124,23 @@ export default function Dashboard() {
         </p>
       </div>
 
+      {dashboardData.role === 'receiver' && impact && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Lots Rescued</p>
+            <p className="text-3xl font-black text-gray-900 mt-1">{impact.total_lots_collected}</p>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Kg Rescued</p>
+            <p className="text-3xl font-black text-gray-900 mt-1">{impact.total_kg_rescued}</p>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Meals Rescued</p>
+            <p className="text-3xl font-black text-gray-900 mt-1">{impact.total_meals_rescued}</p>
+          </div>
+        </div>
+      )}
+
       {dashboardData.role === 'receiver' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {dashboardData.claims.length === 0 ? (
@@ -97,6 +151,7 @@ export default function Dashboard() {
                 <div>
                   <div className="flex justify-between items-start mb-4">
                     <span className={`text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full ${
+                      item.status === 'Collected' ? 'bg-blue-50 text-blue-700' :
                       item.status === 'Approved' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
                     }`}>
                       {item.status}
@@ -105,20 +160,31 @@ export default function Dashboard() {
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 tracking-tight">{item.listing.title}</h3>
                   <div className="mt-6 space-y-2 text-sm text-gray-600">
-                    <p>📍 <span className="font-semibold text-gray-700">{item.listing.pickup_location}</span></p>
-                    <p>⚖️ <span className="font-semibold text-gray-700">{item.listing.quantity}</span></p>
-                    <p>🏢 Donor: <span className="font-semibold text-gray-700">{item.listing.donor}</span></p>
+                    <p> <span className="font-semibold text-gray-700">{item.listing.pickup_location}</span></p>
+                    <p> <span className="font-semibold text-gray-700">{item.listing.quantity}</span></p>
+                    <p> Donor: <span className="font-semibold text-gray-700">{item.listing.donor}</span></p>
                     <div className="mt-4 p-3 bg-food-light/60 rounded-2xl border border-food-light text-xs text-food-dark">
-                      <p>🕒 <strong className="text-gray-900">Requested Pickup Window:</strong> <span className="font-bold">{item.pickup_time}</span></p>
+                      <p> <strong className="text-gray-900">Requested Pickup Window:</strong> <span className="font-bold">{item.pickup_time}</span></p>
                     </div>
                   </div>
                 </div>
-                <div className="mt-8 pt-6 border-t border-gray-50">
+                <div className="mt-8 pt-6 border-t border-gray-50 space-y-3">
+                  {item.status === 'Approved' && (
+                    <button
+                      onClick={() => handleMarkCollected(item.claim_id)}
+                      className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-food-primary transition text-xs shadow-sm flex items-center justify-center gap-2"
+                    >
+                       Mark as Collected
+                    </button>
+                  )}
+                  {item.status === 'Collected' && (
+                    <p className="text-blue-700 font-bold text-center text-xs pb-1"> Collection Verified</p>
+                  )}
                   <button
                     onClick={() => handleOpenWhatsApp(item.listing.donor, item.listing.title, item.pickup_time, item.donor_phone)}
                     className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition text-xs shadow-sm flex items-center justify-center gap-2"
                   >
-                    💬 WhatsApp Donor for Instructions
+                     WhatsApp Donor for Instructions
                   </button>
                 </div>
               </div>
@@ -137,6 +203,7 @@ export default function Dashboard() {
                 <div>
                   <div className="flex justify-between items-start mb-4">
                     <span className={`text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full ${
+                      item.claim_status === 'Collected' ? 'bg-blue-50 text-blue-700' :
                       item.claim_status === 'Approved' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
                     }`}>
                       {item.claim_status}
@@ -145,16 +212,15 @@ export default function Dashboard() {
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 tracking-tight">{item.listing.title}</h3>
                   <div className="mt-6 space-y-2 text-sm text-gray-600">
-                    <p>⚖️ Quantity: <span className="font-semibold text-gray-700">{item.listing.quantity}</span></p>
-                    <p>📍 Location: <span className="font-semibold text-gray-700">{item.listing.pickup_location}</span></p>
+                    <p> Quantity: <span className="font-semibold text-gray-700">{item.listing.quantity}</span></p>
+                    <p> Location: <span className="font-semibold text-gray-700">{item.listing.pickup_location}</span></p>
                     {item.is_claimed ? (
                       <div className="mt-4 p-4 bg-amber-50 rounded-2xl text-xs space-y-2 border border-amber-100 text-amber-900">
-                        <p className="font-bold">🤝 Claimed by: <span className="underline">{item.claimed_by}</span></p>
+                        <p className="font-bold"> Claimed by: <span className="underline">{item.claimed_by}</span></p>
                         {item.receiver_phone && (
-                          <p className="font-bold">📞 Phone: <span className="text-gray-800">{item.receiver_phone}</span></p>
+                          <p className="font-bold"> Phone: <span className="text-gray-800">{item.receiver_phone}</span></p>
                         )}
-                        <p className="font-bold">🕒 Pickup Time: <span className="text-food-dark">{item.pickup_time}</span></p>
-                        
+                        <p className="font-bold"> Pickup Time: <span className="text-food-dark">{item.pickup_time}</span></p>
                         {item.claim_status === 'Pending Approval' ? (
                           <button 
                             onClick={() => handleApproveClaim(item.claim_id)}
@@ -168,7 +234,7 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       <p className="mt-4 p-3 bg-gray-50 rounded-2xl text-xs font-bold text-gray-500">
-                        ⏳ Waiting for recipient claim...
+                         Waiting for recipient claim...
                       </p>
                     )}
                   </div>
@@ -181,7 +247,7 @@ export default function Dashboard() {
                       onClick={() => handleOpenWhatsApp(item.claimed_by, item.listing.title, item.pickup_time, item.receiver_phone)}
                       className="bg-blue-600 text-white px-3 py-2 rounded-xl hover:bg-blue-700 transition shadow-sm inline-flex items-center gap-1"
                     >
-                      💬 Message Receiver
+                      Message Receiver
                     </button>
                   )}
                 </div>
