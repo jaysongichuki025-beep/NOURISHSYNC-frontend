@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,7 @@ export default function Dashboard() {
       return;
     }
 
-    fetch('http://localhost:5000/api/dashboard', {
+    fetch(`${API_URL}/api/dashboard`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -36,7 +38,7 @@ export default function Dashboard() {
   const handleApproveClaim = async (claimId) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5000/api/claims/${claimId}/approve`, {
+      const res = await fetch(`${API_URL}/api/claims/${claimId}/approve`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,

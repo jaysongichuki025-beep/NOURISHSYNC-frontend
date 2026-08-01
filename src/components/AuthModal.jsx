@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
@@ -21,8 +23,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     sessionStorage.clear();
 
     const endpoint = isRegistering 
-      ? 'http://localhost:5000/api/auth/register' 
-      : 'http://localhost:5000/api/auth/login';
+      ? `${API_URL}/api/auth/register` 
+      : `${API_URL}/api/auth/login`;
 
     const payload = isRegistering 
       ? { username, password, role, organization_name: organizationName, phone_number: phoneNumber }

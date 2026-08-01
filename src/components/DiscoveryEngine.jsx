@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 export default function DiscoveryEngine({ onClaimSuccess }) {
   const [listings, setListings] = useState([]);
   const [selectedListing, setSelectedListing] = useState(null);
@@ -8,7 +10,7 @@ export default function DiscoveryEngine({ onClaimSuccess }) {
 
   const fetchListings = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/listings');
+      const res = await fetch(`${API_URL}/api/listings`);
       const data = await res.json();
       if (res.ok) setListings(data);
       setLoading(false);
@@ -30,7 +32,7 @@ export default function DiscoveryEngine({ onClaimSuccess }) {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/claim', {
+      const res = await fetch(`${API_URL}/api/claim`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
